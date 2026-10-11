@@ -2,6 +2,19 @@
 
 A new Flutter project.
 
+## การตั้งค่าก่อนรัน
+
+แอปอ่าน URL ของ backend จากไฟล์ `.env` (ไฟล์นี้ไม่ได้อยู่ใน git)
+
+1. คัดลอก `.env.example` เป็น `.env`
+2. แก้ `BASE_URL` เป็น IP ของเครื่องที่รัน backend (ต้องมี `/api` ต่อท้าย) เช่น
+
+   ```
+   BASE_URL=http://192.168.1.101:8081/api
+   ```
+
+3. รัน `flutter run` — ถ้าแก้ `.env` ภายหลัง ต้องหยุดแล้วรันใหม่ (hot restart ไม่พอ)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

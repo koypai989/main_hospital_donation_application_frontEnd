@@ -1,10 +1,19 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class DioClient {
-  // โฮสต์ของ backend server (ไฟล์รูปที่อัปโหลดก็ถูกเสิร์ฟจากโฮสต์เดียวกันนี้ใต้ /api)
-  static const String serverHost = 'http://172.20.10.3:8081';
+  // URL ของ backend (รวม /api) อ่านจาก BASE_URL ในไฟล์ .env — แก้ที่เดียวจบ
+  // ต้องเรียก dotenv.load() ใน main() ก่อนใช้งาน
+  static String get baseUrl {
+    final String url = (dotenv.maybeGet('BASE_URL') ?? '').trim();
+    if (url.isEmpty) {
+      throw StateError('ไม่พบ BASE_URL ในไฟล์ .env');
+    }
+    return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+  }
 
   static final Dio dio = Dio(BaseOptions(
-    baseUrl: '$serverHost/api',
+    baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
   ))..interceptors.add(

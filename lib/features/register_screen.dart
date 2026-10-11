@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:project_final_411/core/network/dio_client.dart';
+import 'package:project_final_411/core/utils/validators.dart';
 import 'package:project_final_411/data/sevices/donator_service.dart';
 import 'package:project_final_411/data/sevices/hospital_service.dart';
 import 'package:project_final_411/features/login_screen.dart';
@@ -74,21 +75,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ==========================================
   String? _requiredValidator(String? v, [String label = 'ข้อมูลนี้']) {
     if (v == null || v.trim().isEmpty) return 'กรุณากรอก$label';
-    return null;
-  }
-
-  String? _emailValidator(String? v) {
-    final e = v?.trim() ?? '';
-    if (e.isEmpty) return 'กรุณากรอกอีเมล';
-    final regex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\-\.]+$');
-    if (!regex.hasMatch(e)) return 'รูปแบบอีเมลไม่ถูกต้อง';
-    return null;
-  }
-
-  String? _passwordValidator(String? v) {
-    final p = v ?? '';
-    if (p.isEmpty) return 'กรุณากรอกรหัสผ่าน';
-    if (p.length < 6) return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
     return null;
   }
 
@@ -453,9 +439,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 24),
             _buildSectionHeader('ACCOUNT CREDENTIALS'),
             _buildTextField('Email Address', 'your@email.com', prefixIcon: Icons.email_outlined, controller: _dnEmailCtrl,
-                keyboardType: TextInputType.emailAddress, validator: _emailValidator),
+                keyboardType: TextInputType.emailAddress, validator: validateEmail),
             _buildTextField('Password', 'Create a password', prefixIcon: Icons.lock_outline, isPassword: true, controller: _dnPasswordCtrl,
-                validator: _passwordValidator),
+                validator: validatePassword),
           ],
         ),
       ),
@@ -498,9 +484,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 24),
             _buildSectionHeader('ADMIN CREDENTIALS'),
             _buildTextField('Email Address', 'admin@hospital.com', prefixIcon: Icons.email_outlined, controller: _hpAdminEmailCtrl,
-                keyboardType: TextInputType.emailAddress, validator: _emailValidator),
+                keyboardType: TextInputType.emailAddress, validator: validateEmail),
             _buildTextField('Password', 'Create a password', prefixIcon: Icons.lock_outline, isPassword: true, controller: _hpAdminPasswordCtrl,
-                validator: _passwordValidator),
+                validator: validatePassword),
 
             const SizedBox(height: 24),
             _buildSectionHeader('REQUIRED DOCUMENTS'),

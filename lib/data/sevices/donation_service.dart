@@ -12,7 +12,9 @@ class DonationService {
   }
 
   // การตรวจสลิปฝั่ง server อาจใช้เวลาถึง ~25 วิ จึงตั้ง timeout ให้ยาวเป็นพิเศษ
-  // คืน result = { donationId, certificatePath }
+  // คืน result = ข้อมูลการบริจาคทั้งหมด
+  // { donationId, amount, donationDate, slipImagePath, certificatePath, refNumber, targetType, targetId, targetName }
+  // หมายเหตุ: ไม่ต้องส่ง amount — backend อ่านยอดเงินจากสลิปให้เอง
   Future<Map<String, dynamic>?> createDonation(Map<String, dynamic> data) async {
     final response = await DioClient.dio.post(
       '/v1/donations',

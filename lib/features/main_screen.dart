@@ -66,6 +66,7 @@ class _MainscreenState extends State<Mainscreen> {
   List<FeedItem> _allItems = []; // ข้อมูลทั้งหมด (ไว้ค้นหา)
   List<FeedItem> _items = []; // ข้อมูลที่แสดงจริง (หลังกรอง/ค้นหา)
   FeedType? _selectedTypeFilter; // null = ทั้งหมด (ค่าเริ่มต้น)
+  List<Hospital> _suggested = []; // โรงพยาบาลแนะนำ (ได้รับบริจาคน้อยที่สุด)
 
   @override
   void initState() {
@@ -87,6 +88,14 @@ class _MainscreenState extends State<Mainscreen> {
       final prefs = await SharedPreferences.getInstance();
 
       final hospitalResponse = await hospitalService.getApprovedHospitals();
+
+      // โรงพยาบาลแนะนำ (ได้รับบริจาคน้อยที่สุด) — ถ้าพลาดก็ยังแสดงหน้าหลักได้
+      List<Hospital> suggestedResponse = [];
+      try {
+        suggestedResponse = await hospitalService.getSuggestedHospitals(limit: 5);
+      } catch (e) {
+        print('Error loading suggested hospitals: $e');
+      }
 
       // ดึงมูลนิธิทั้งหมด (ถ้าพลาดก็ยังแสดงโรงพยาบาลได้)
       List<Foundation> foundationResponse = [];
@@ -126,9 +135,11 @@ class _MainscreenState extends State<Mainscreen> {
 
       setState(() {
         userId = prefs.getInt('user_id');
-        userEmail = prefs.getString('user_email') ?? 'Unknown';
-        name = prefs.getString('name') ?? 'Unknown';
-        role = prefs.getString('user_role') ?? 'Unknown';
+        // ถ้ายังไม่ได้เข้าสู่ระบบ (ผู้เยี่ยมชม) ให้เป็นค่าว่าง ไม่ใช่ "Unknown"
+        userEmail = prefs.getString('user_email') ?? '';
+        name = prefs.getString('name') ?? '';
+        role = prefs.getString('user_role') ?? '';
+        _suggested = suggestedResponse;
         _allItems = items;
         _items = List.from(items);
         print("User ID: $userId, Email: $userEmail, Name: $name, Role: $role");
@@ -222,7 +233,7 @@ class _MainscreenState extends State<Mainscreen> {
                             style: TextStyle(color: Colors.white70, fontSize: 16),
                           ),
                           Text(
-                            name.isNotEmpty ? name : 'ผู้ใช้',
+                            name.isNotEmpty ? name : 'ผู้เยี่ยมชม',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
@@ -275,6 +286,39 @@ class _MainscreenState extends State<Mainscreen> {
             ),
 
             const SizedBox(height: 24),
+
+            // แนะนำโรงพยาบาลที่ยังได้รับบริจาคน้อย (ซ่อนตอนกำลังค้นหา)
+            if (!isLoading && _suggested.isNotEmpty && _searchController.text.trim().isEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  'โรงพยาบาลที่ยังได้รับบริจาคน้อย',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 24.0, right: 24.0, top: 4),
+                child: Text(
+                  'ร่วมเป็นกำลังใจให้โรงพยาบาลเหล่านี้',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 182,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  itemCount: _suggested.length,
+                  itemBuilder: (context, index) => _buildSuggestedCard(_suggested[index]),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
 
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.0),
@@ -367,6 +411,94 @@ class _MainscreenState extends State<Mainscreen> {
             const BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: 'อนุมัติ'),
           const BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'โปรไฟล์'),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestedCard(Hospital h) {
+    final String imageUrl = resolveImageUrl(h.logo);
+    return GestureDetector(
+      onTap: () {
+        if (h.hospitalId == null) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HospitalDetailScreen(hospitalId: h.hospitalId!),
+          ),
+        );
+      },
+      child: Container(
+        width: 170,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 96,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFFD1E9EE),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Center(
+                          child: Icon(Icons.local_hospital, size: 36, color: Colors.white),
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(Icons.local_hospital, size: 36, color: Colors.white),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    withHospitalPrefix(h.hospitalName),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.favorite_border, size: 13, color: Color(0xFF0A85A0)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'รอการสนับสนุน',
+                          style: const TextStyle(
+                              color: Color(0xFF0A85A0), fontSize: 12, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

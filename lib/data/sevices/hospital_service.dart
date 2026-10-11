@@ -56,6 +56,21 @@ class HospitalService {
     }
   }
 
+  // โรงพยาบาลแนะนำ = ได้รับบริจาคน้อยที่สุด
+  Future<List<Hospital>> getSuggestedHospitals({int limit = 5}) async {
+    try {
+      var response = await DioClient.dio.get(
+        '/v1/hospitals/suggested',
+        queryParameters: {'limit': limit},
+      );
+      return (response.data["result"] as List)
+          .map((item) => Hospital.fromJson(item))
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<List<Hospital>> getApprovedHospitals() async {
     try {
       var response = await DioClient.dio.get('/v1/hospitals/approved');
