@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DioClient {
-  // URL ของ backend (รวม /api) อ่านจาก BASE_URL ในไฟล์ .env — แก้ที่เดียวจบ
-  // ต้องเรียก dotenv.load() ใน main() ก่อนใช้งาน
   static String get baseUrl {
     final String url = (dotenv.maybeGet('BASE_URL') ?? '').trim();
     if (url.isEmpty) {
