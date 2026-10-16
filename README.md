@@ -13,8 +13,6 @@ A new Flutter project.
    BASE_URL=http://192.168.1.101:8081/api
    ```
 
-3. รัน `flutter run` — ถ้าแก้ `.env` ภายหลัง ต้องหยุดแล้วรันใหม่ (hot restart ไม่พอ)
-
 ## Getting Started
 
 This project is a starting point for a Flutter application.
